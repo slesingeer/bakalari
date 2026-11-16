@@ -43,8 +43,6 @@ def fetch_all(base, user, pwd):
         "marks": call(root + "/api/3/marks", token=tok),
         "absence": safe(lambda: call(root + "/api/3/absence/student", token=tok)),
         "timetable": safe(lambda: call(root + f"/api/3/timetable/actual?date={today}", token=tok)),
-        "homeworks": safe(lambda: call(root + f"/api/3/homeworks?from={today}", token=tok)),
-        "events": safe(lambda: call(root + "/api/3/events", token=tok)),
     }
 
 class H(BaseHTTPRequestHandler):
@@ -182,14 +180,6 @@ function sel(opts,v,fn){const e=h("select",{onchange:ev=>fn(ev.target.value)});
  opts.forEach(o=>{const[a,b]=Array.isArray(o)?o:[o,o];const op=h("option",{value:a},String(b));if(String(a)===String(v))op.selected=true;e.append(op)});return e}
 const M=(id,t,w,c,d,n)=>({id,t,w,c,d,n});
 function dayStr(n){const d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
-function demoTodo(){return[
- {id:"a",date:dayStr(1),kind:"ukol",subj:"Fyzika",title:"Příklady 1–5 ze cvičebnice"},
- {id:"b",date:dayStr(3),kind:"test",subj:"Matematika",title:"Kvadratické rovnice",desc:"Písemný test, 30 minut"},
- {id:"c",date:dayStr(5),kind:"ukol",subj:"Český jazyk",title:"Přečíst 2. kapitolu"},
- {id:"d",date:dayStr(6),kind:"test",subj:"Fyzika",title:"Pohyb a síla"},
- {id:"e",date:dayStr(9),kind:"test",subj:"Angličtina",title:"Slovíčka, unit 5"},
- {id:"f",date:dayStr(12),kind:"akce",subj:"",title:"Exkurze do muzea techniky"},
- {id:"g",date:dayStr(-1),kind:"ukol",subj:"Dějepis",title:"Referát o středověku"}]}
 function demoDays(){return[
  {date:dayStr(-2),ok:6,miss:0,late:0,soon:0,sch:0,un:false},{date:dayStr(-9),ok:2,miss:2,late:0,soon:0,sch:0,un:true},
  {date:dayStr(-20),ok:0,miss:0,late:1,soon:0,sch:0,un:false},{date:dayStr(-33),ok:5,miss:0,late:0,soon:1,sch:0,un:false}]}
@@ -208,8 +198,7 @@ const DEMO={thr:30,un:1,days:demoDays(),tot:{ok:20,miss:8,late:3,soon:1,sch:0},
   {name:"Fyzika",prev:[2.2,2.5],marks:[M(11,"2",3,"Referát","2026-10-01"),M(12,"3-",4,"Test","2026-11-08")]},
   {name:"Dějepis",prev:[2.0,2.2],marks:[M(13,"2",3,"Ústní","2026-09-28"),M(14,"2-",4,"Test","2026-10-25"),M(15,"1",2,"Aktivita","2026-11-10")]}],
  abs:[{n:"Matematika",l:60,b:4},{n:"Český jazyk",l:50,b:9},{n:"Angličtina",l:45,b:2},{n:"Fyzika",l:30,b:10},{n:"Dějepis",l:28,b:3}],
- tt:demoWeek(),
- todo:demoTodo()};
+ tt:demoWeek()};
 let DATA=DEMO;
 const S={tab:"over",open:null,goal:{},hypo:{},w:{},hm:{},hw:{},seen:new Set(),theme:0};
 try{S.seen=new Set(JSON.parse(localStorage.getItem("seen")||"[]"))}catch(e){}
@@ -238,8 +227,8 @@ function subject(s){
  if(op){const g=S.goal[s.name]||2,hm=S.hm[s.name]||2,[c,t]=goalText(s,+g),base=avg(s.marks);
   box.append(h("div",{className:"open"},
    h("div",{className:"row"},h("span",{className:"mu"},"Vývoj průměru"),spark(trend(s))),
-   h("div",{style:"margin-top:8px"},...s.marks.slice().sort((x,y)=>x.d.localeCompare(y.d)).map(m=>h("div",{className:"row mu",style:"padding:3px 0"},
-    h("span",{},m.c),badge(m.t)))),
+   h("div",{style:"margin-top:8px"},...s.marks.slice().sort((x,y)=>y.d.localeCompare(x.d)).map(m=>h("div",{className:"row mu",style:"padding:3px 0"},
+    h("span",{style:"display:flex;gap:12px"},h("span",{style:"width:52px"},m.d?new Date(m.d+"T12:00:00").toLocaleDateString("cs-CZ",{day:"numeric",month:"numeric"}):""),h("span",{},m.c)),badge(m.t)))),
    hy.length?h("div",{className:"mu",style:"margin-top:6px"},`S fiktivními známkami: ${n2(base)} → ${n2(a)}`):"",
    h("div",{className:"ctl"},"Co když dostanu",sel(mo(),hm,v=>{S.hm[s.name]=+v}),
     h("button",{onclick(){(S.hypo[s.name]=S.hypo[s.name]||[]).push({t:fmt(+hm),w:1,d:"",c:"Fiktivní"});draw()}},"Přidat"),
@@ -252,9 +241,11 @@ function overview(o){
   b=Math.max(DATA.abs.reduce((x,y)=>x+y.b,0),DATA.tot?DATA.tot.ok+DATA.tot.miss:0),l=DATA.abs.reduce((x,y)=>x+y.l,0),p=l?b/l*100:0;
  o.append(h("div",{className:"hero"},h("div",{className:"mu"},"Celkový průměr"),h("div",{className:"num",style:"color:"+gc(tot)},n2(tot)),
   h("div",{className:"scale"},h("i",{className:"knob",style:`left:${(tot-1)/4*100}%`})),
-  h("div",{className:"two"},
-   h("div",{},h("div",{className:"mu"},"Nejlépe ti jde"),h("div",{className:"num"},so[0].s.name),h("div",{className:"mu"},n2(so[0].a))),
-   h("div",{},h("div",{className:"mu"},"Nejvíc se vyplatí zabrat"),h("div",{className:"num"},so[so.length-1].s.name),h("div",{className:"mu"},n2(so[so.length-1].a))))));
+  ));
+ const rowOf=x=>h("div",{className:"row"},h("span",{style:"font-weight:600"},x.s.name),h("span",{className:"num",style:`font-weight:700;color:${gc(x.a)}`},n2(x.a)));
+ const tie=v=>so.filter(x=>n2(x.a)==n2(v));
+ o.append(h("h2",{},"Nejlépe ti jde"),h("div",{className:"list"},...tie(so[0].a).map(rowOf)));
+ o.append(h("h2",{},"Nejvíc se vyplatí zabrat"),h("div",{className:"list"},...tie(so[so.length-1].a).map(rowOf)));
  const bad=L.filter(x=>x.a>2.5),c1=tot<=1.5,okH=c1&&!bad.length;
  o.append(h("h2",{},"Vyznamenání"),h("div",{className:"list"},
   h("div",{className:"row"},h("b",{className:okH?"ok":"er"},okH?"Podmínky zatím splňuješ":"Podmínky zatím nesplňuješ")),
@@ -296,24 +287,6 @@ function today(o){
     h("div",{style:"flex:1;min-width:0"},h("div",{className:"ls"},r.s),h("div",{className:"mu"},r.r)),
     r.c?h("span",{className:"pill"+(r.x?" bad":"")},r.c):now?h("span",{className:"pill"},"teď"):"")})):h("div",{className:"mu",style:"margin-top:12px"},"V tento den nejsou žádné hodiny."))}
  }
-function todo(o){
- const f=S.tf||"all",today=dayStr(0),dd=x=>Math.round((new Date(x.date+"T12:00:00")-new Date(today+"T12:00:00"))/864e5);
- const dn=n=>n==1?"den":n<5?"dny":"dní";
- const items=DATA.todo.filter(x=>(f=="all"||x.kind==f)&&(x.kind=="ukol"||dd(x)>=0)).sort((a,b)=>a.date.localeCompare(b.date));
- const grp=x=>{const d=dd(x);return x.kind=="ukol"&&S.hw[x.id]?"Hotovo":d<0?"Po termínu":d==0?"Dnes":d==1?"Zítra":d<=7?"Tento týden":"Později"};
- o.append(h("h1",{},"To-do"),h("div",{className:"days",style:"margin:12px 0"},...[["all","Vše"],["test","Testy"],["ukol","Úkoly"],["akce","Akce"]].map(([k,n])=>
-  h("button",{className:"day"+(f==k?" on":""),style:"padding:10px 0;font-size:.9rem",onclick(){S.tf=k;draw()}},n))));
- if(!items.length)o.append(h("div",{className:"mu"},"Nic naplánováno."));
- ["Po termínu","Dnes","Zítra","Tento týden","Později","Hotovo"].forEach(g=>{const L=items.filter(x=>grp(x)==g);if(!L.length)return;
-  o.append(h("h2",{},g),h("div",{className:"list"},...L.map(x=>{const d=dd(x),done=x.kind=="ukol"&&S.hw[x.id];
-   return h("div",{className:"row",style:"align-items:flex-start;"+(done?"opacity:.5":"")},
-    h("span",{style:"flex:1;min-width:0"},
-     h("div",{},h("span",{className:"tag "+x.kind},{test:"Test",ukol:"Úkol",akce:"Akce"}[x.kind]),x.subj?h("b",{style:"margin-left:8px"},x.subj):""),
-     h("div",{style:"margin-top:4px;font-weight:500"+(done?";text-decoration:line-through":"")},x.title||"Bez popisu"),
-     x.desc?h("div",{className:"mu"},x.desc):""),
-    h("span",{style:"text-align:right;white-space:nowrap"},h("div",{style:"font-weight:600"},new Date(x.date+"T12:00:00").toLocaleDateString("cs-CZ",{weekday:"short",day:"numeric",month:"numeric"})),
-     h("div",{className:"mu"},d<0?(d==-1?"včera":"před "+(-d)+" dny"):d==0?"dnes":d==1?"zítra":"za "+d+" "+dn(d))),
-    x.kind=="ukol"?h("button",{className:"chk"+(done?" on":""),"aria-label":"Hotovo",onclick(){S.hw[x.id]=!S.hw[x.id];draw()}},done?"✓":""):"")})))})}
 function more(o){
  const nm=["automatický","světlý","tmavý"];
  o.append(h("h1",{},"Více"),h("div",{className:"list",style:"margin-top:12px"},h("div",{className:"row"},h("span",{},"Účet"),h("button",{onclick(){location.reload()}},"Odhlásit")),
@@ -323,15 +296,15 @@ function more(o){
   h("div",{className:"row"},h("span",{},"Vzhled: "+nm[S.theme]),h("button",{onclick(){S.theme=(S.theme+1)%3;const r=document.documentElement;S.theme?r.setAttribute("data-theme",S.theme==1?"light":"dark"):r.removeAttribute("data-theme");draw()}},"Změnit")),
   h("div",{className:"row"},h("span",{},"Uložit přehled jako PDF"),h("button",{onclick(){try{window.print()}catch(e){}}},"Tisk")),
   h("div",{},h("div",{style:"font-weight:500"},"Přidat na plochu iPhonu"),h("div",{className:"mu"},"V Safari ťukni na Sdílet a vyber „Přidat na plochu“."))))}
-const IC={over:"M4 11l8-7 8 7v9H4zM10 20v-6h4v6",subj:"M5 6h14M5 12h14M5 18h9",abs:"M7 3v3M17 3v3M4 8h16v12H4zM9 13l6 4M15 13l-6 4",today:"M12 7v5l3 2M12 3a9 9 0 100 18 9 9 0 000-18",more:"M6 12h.01M12 12h.01M18 12h.01",todo:"M5 7l2 2 3-3M5 15l2 2 3-3M13 8h6M13 16h6"};
-const TABS=[["over","Přehled"],["subj","Předměty"],["abs","Absence"],["today","Rozvrh"],["todo","To-do"],["more","Více"]];
+const IC={over:"M4 11l8-7 8 7v9H4zM10 20v-6h4v6",subj:"M5 6h14M5 12h14M5 18h9",abs:"M7 3v3M17 3v3M4 8h16v12H4zM9 13l6 4M15 13l-6 4",today:"M12 7v5l3 2M12 3a9 9 0 100 18 9 9 0 000-18",more:"M6 12h.01M12 12h.01M18 12h.01"};
+const TABS=[["over","Přehled"],["subj","Předměty"],["abs","Absence"],["today","Rozvrh"],["more","Více"]];
 function draw(){
  const nav=document.getElementById("nav");nav.replaceChildren(...TABS.map(([k,n])=>{const b=h("button",{className:S.tab==k?"on":"",onclick(){S.tab=k;draw();scrollTo(0,0)}});
   b.innerHTML=`<svg viewBox="0 0 24 24"><path d="${IC[k]}"/></svg>`;b.append(n);return b}));
  const top=document.getElementById("top");top.replaceChildren(h("div",{className:"row"},h("span",{className:"brand"},"Žákovka"),h("span",{className:"mu"},new Date().toLocaleDateString("cs-CZ",{weekday:"long",day:"numeric",month:"long"}))));
  const o=document.getElementById("out");o.replaceChildren();o.className=S.last!==S.tab?"enter":"";S.last=S.tab;
  ({over:overview,subj:o=>{o.append(h("h1",{},"Předměty"),h("div",{className:"mu"},"Každá tečka je jedna známka, kroužek je průměr. Ťukni na předmět."),
-  h("div",{className:"list",style:"margin-top:12px"},...DATA.subs.slice().sort((a,b)=>avg(all(a))-avg(all(b))).map(subject)))},abs:absence,today,todo,more})[S.tab](o)}
+  h("div",{className:"list",style:"margin-top:12px"},...DATA.subs.slice().sort((a,b)=>avg(all(a))-avg(all(b))).map(subject)))},abs:absence,today,more})[S.tab](o)}
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,"0");
 function convTT(t){
@@ -343,12 +316,6 @@ function convTT(t){
    return{h:hr.Caption||"",from:hr.BeginTime||"",to:hr.EndTime||"",s:sub[a.SubjectId]||(c&&c.Description)||"—",r:room[a.RoomId]||"",
     c:c?(c.TypeName||c.Description||"Změna"):"",x:!!(c&&/cancel|remov|odpad|zruš/i.test((c.ChangeType||"")+(c.TypeName||"")))}})})).filter(d=>d.date)}
 function dIso(x){if(!x)return"";const d=new Date(x);return isNaN(d)?String(x).slice(0,10):`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
-function convHW(r){const L=r&&(r.Homeworks||r.homeworks)||[];
- return L.filter(x=>!x.Done).map((x,i)=>({id:"h"+(x.ID||x.Id||i),date:dIso(x.DateEnd||x.Date),kind:"ukol",subj:(x.Subject&&x.Subject.Name)||x.SubjectName||"",title:x.Content||x.Text||x.Notice||"",desc:""})).filter(x=>x.date)}
-function convEV(r){const L=r&&(r.Events||r.events)||[];
- return L.map((e,i)=>{const t=(e.Times&&e.Times[0])||{},typ=(e.EventType&&e.EventType.Name)||"",txt=(e.Title||"")+" "+typ+" "+(e.Description||"");
-  return{id:"e"+(e.Id||i),date:dIso(t.StartTime||e.StartTime||e.Date),kind:/test|písemk|písemn|prověrk|zkoušen|kompozic|slohov|čtvrtletk|diktát/i.test(txt)?"test":"akce",
-   subj:(e.Subject&&e.Subject.Name)||"",title:e.Title||typ,desc:e.Description||""}}).filter(x=>x.date)}
 function convert(r){
  const subs=(r.marks.Subjects||[]).map(s=>({name:s.Subject.Name,prev:null,
   marks:(s.Marks||[]).filter(m=>!m.IsPoints).map(m=>M(m.Id,m.MarkText,1,m.TypeNote||m.Caption||m.Theme||"",(m.MarkDate||"").slice(0,10),m.IsNew?1:0))}))
@@ -360,7 +327,7 @@ function convert(r){
  return{thr,subs,un:days.filter(a=>a.Unsolved).length,abs,
   tot:{ok:sum("Ok"),miss:sum("Missed"),late:sum("Late"),soon:sum("Soon"),sch:sum("School")},
   raw:JSON.stringify(ab).slice(0,1500),
-  tt:convTT(r.timetable),todo:convEV(r.events).concat(convHW(r.homeworks)),
+  tt:convTT(r.timetable),
   days:days.filter(d=>["Ok","Missed","Late","Soon","School"].some(k=>+d[k]>0)||d.Unsolved).map(d=>({date:dIso(d.Date),ok:+d.Ok||0,miss:+d.Missed||0,late:+d.Late||0,soon:+d.Soon||0,sch:+d.School||0,un:!!d.Unsolved})).sort((a,b)=>b.date.localeCompare(a.date))}}
 function start(d){DATA=d;S.tab="over";S.open=null;S.hypo={};S.goal={};S.hw={};$("login").style.display="none";draw()}
 $("go").onclick=async()=>{
