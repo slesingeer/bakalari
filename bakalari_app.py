@@ -155,6 +155,37 @@ button{transition:transform .12s,opacity .12s}button:active{transform:scale(.97)
 .tag.test,.pill.bad{background:color-mix(in srgb,var(--g5) 15%,transparent);color:var(--g5)}
 .tag.ukol{background:var(--acs);color:var(--ac)}.tag.akce{background:color-mix(in srgb,var(--g3) 18%,transparent);color:var(--g3)}
 .pill.ok{background:color-mix(in srgb,var(--g1) 15%,transparent);color:var(--g1)}
+
+:root{--glow:var(--ac);--sh:0 1px 2px rgba(22,32,58,.04),0 10px 28px rgba(22,32,58,.07)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--sh:0 10px 28px rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{--sh:0 10px 28px rgba(0,0,0,.35)}
+html{background:var(--bg)}
+body{padding-bottom:124px;font-variant-numeric:tabular-nums}
+body:before{content:"";position:fixed;inset:0 0 auto;height:340px;z-index:-1;pointer-events:none;transition:background .6s;background:radial-gradient(70% 100% at 50% 0,color-mix(in srgb,var(--glow) 16%,transparent),transparent)}
+h2{font-size:1.05rem;margin:30px 2px 10px}
+.list{border-radius:20px;box-shadow:var(--sh);border-color:color-mix(in srgb,var(--ln) 70%,transparent)}
+.brand{display:flex;align-items:center;gap:8px}
+.brand:before{content:"Ž";width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:.9rem;color:#fff;background:linear-gradient(135deg,var(--ac),#9b6bff)}
+.hero{margin-top:10px;padding:26px 22px 20px;border-radius:28px;border:1px solid var(--ln);box-shadow:var(--sh);background:linear-gradient(160deg,color-mix(in srgb,var(--glow) 14%,var(--sf)),var(--sf) 70%)}
+.hero .num{font-size:6rem;letter-spacing:-.04em}
+.scl{display:flex;justify-content:space-between;font-size:.7rem;color:var(--mu);margin:0 3px}
+.hmsg{font-weight:600;margin-top:12px}
+.scale{height:8px;border-radius:4px}
+.knob{box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.track:before{height:3px;border-radius:2px;background:linear-gradient(90deg,color-mix(in srgb,var(--g1) 35%,var(--ln)),var(--ln) 50%,color-mix(in srgb,var(--g5) 35%,var(--ln)))}
+.dot{box-shadow:0 1px 3px rgba(0,0,0,.25)}.avgm{box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.chev{color:var(--mu);display:grid;transition:transform .25s}.chev.up{transform:rotate(180deg)}
+.bar{height:8px;border-radius:4px}.bar i{border-radius:4px}
+.abrow{display:flex;gap:18px;align-items:center}
+.enter .bar i{animation:grow .9s cubic-bezier(.2,.7,.2,1)}@keyframes grow{from{width:0}}
+.enter .arc{animation:arc 1s cubic-bezier(.2,.7,.2,1)}@keyframes arc{from{stroke-dashoffset:214}}
+nav{left:14px;right:14px;bottom:calc(10px + env(safe-area-inset-bottom,0px));max-width:532px;margin:0 auto;padding:6px;border-radius:26px;border:1px solid var(--ln);background:color-mix(in srgb,var(--sf) 80%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.5);backdrop-filter:blur(18px) saturate(1.5);box-shadow:0 12px 32px rgba(22,32,58,.16)}
+nav button{border-radius:20px;padding:8px 0;transition:background .2s,color .2s}nav button.on{background:var(--acs)}
+button.pri{box-shadow:0 6px 18px color-mix(in srgb,var(--ac) 35%,transparent)}
+input:focus,select:focus{outline:2px solid color-mix(in srgb,var(--ac) 55%,transparent);outline-offset:1px;border-color:var(--ac)}
+#login>*{animation:up .55s cubic-bezier(.2,.7,.2,1) both}#login>*:nth-child(2){animation-delay:.05s}#login>*:nth-child(3){animation-delay:.1s}#login>*:nth-child(4){animation-delay:.15s}#login>*:nth-child(n+5){animation-delay:.2s}
+#go:disabled:after{content:"";display:inline-block;width:14px;height:14px;margin-left:10px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px}@keyframes spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.enter .bar i,.enter .arc,#login>*,#go:disabled:after{animation:none}body:before{transition:none}}
 @media print{nav,.noprint{display:none!important}}
 </style></head><body>
 <div id="login">
@@ -222,7 +253,7 @@ function subject(s){
  tr.append(h("b",{className:"avgm",style:`left:${(a-1)/4*100}%;border-color:${gc(a)}`}));
  const head=h("button",{className:"bare",onclick(){S.open=op?null:s.name;draw()}},
   h("div",{className:"row"},h("span",{style:"font-weight:600"},s.name),
-   h("span",{className:"num",style:`font-size:1.5rem;font-weight:700;color:${gc(a)}`},n2(a))),tr,h("div",{style:"height:16px"}));
+   h("span",{style:"display:flex;align-items:center;gap:8px"},h("span",{className:"num",style:`font-size:1.5rem;font-weight:700;color:${gc(a)}`},n2(a)),chev(op))),tr,h("div",{style:"height:16px"}));
  const box=h("div",{},head);
  if(op){const g=S.goal[s.name]||2,hm=S.hm[s.name]||2,[c,t]=goalText(s,+g),base=avg(s.marks);
   box.append(h("div",{className:"open"},
@@ -236,12 +267,19 @@ function subject(s){
    h("div",{className:"ctl"},"Chci na vysvědčení",sel([1,2,3,4],g,v=>{S.goal[s.name]=+v;draw()})),
    h("div",{className:c,style:"margin-top:8px;font-weight:500"},t)))}
  return box}
+function hmsg(t){return t<=1.3?"Výborné výsledky, skoro samé jedničky.":t<=1.8?"Skvělé výsledky.":t<=2.5?"Dobré výsledky.":t<=3.2?"Je kam se zlepšovat.":"Chce to přidat."}
+function countUp(el,to){if(!el||matchMedia("(prefers-reduced-motion:reduce)").matches)return;const t0=performance.now();
+ (function f(t){const k=Math.min(1,(t-t0)/700),e=1-Math.pow(1-k,3);el.textContent=n2(1+(to-1)*e);if(k<1)requestAnimationFrame(f)})(t0)}
+function ring(f,c){const R=34,C=2*Math.PI*R,s=document.createElementNS("http://www.w3.org/2000/svg","svg");s.setAttribute("viewBox","0 0 84 84");s.setAttribute("width","84");s.setAttribute("height","84");
+ s.innerHTML=`<circle cx="42" cy="42" r="${R}" fill="none" stroke="var(--ln)" stroke-width="9"/><circle class="arc" cx="42" cy="42" r="${R}" fill="none" stroke="${c}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-Math.min(1,f))}" transform="rotate(-90 42 42)"/>`;return s}
+function chev(o){const e=h("span",{className:"chev"+(o?" up":"")});e.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';return e}
 function overview(o){
  const L=DATA.subs.map(s=>({s,a:avg(all(s))})),tot=L.reduce((x,y)=>x+y.a,0)/L.length,so=[...L].sort((x,y)=>x.a-y.a),
   b=Math.max(DATA.abs.reduce((x,y)=>x+y.b,0),DATA.tot?DATA.tot.ok+DATA.tot.miss:0),l=DATA.abs.reduce((x,y)=>x+y.l,0),p=l?b/l*100:0;
- o.append(h("div",{className:"hero"},h("div",{className:"mu"},"Celkový průměr"),h("div",{className:"num",style:"color:"+gc(tot)},n2(tot)),
+ o.append(h("div",{className:"hero"},h("div",{className:"mu"},"Celkový průměr"),h("div",{className:"num",id:"avgnum",style:"color:"+gc(tot)},n2(tot)),
   h("div",{className:"scale"},h("i",{className:"knob",style:`left:${(tot-1)/4*100}%`})),
-  ));
+  h("div",{className:"scl"},...[1,2,3,4,5].map(i=>h("span",{},String(i)))),h("div",{className:"hmsg"},hmsg(tot))));
+ document.documentElement.style.setProperty("--glow",gc(tot));if(o.className=="enter")countUp(document.getElementById("avgnum"),tot);
  const rowOf=x=>h("div",{className:"row"},h("span",{style:"font-weight:600"},x.s.name),h("span",{className:"num",style:`font-weight:700;color:${gc(x.a)}`},n2(x.a)));
  const tie=v=>so.filter(x=>n2(x.a)==n2(v));
  o.append(h("h2",{},"Nejlépe ti jde"),h("div",{className:"list"},...tie(so[0].a).map(rowOf)));
@@ -252,10 +290,11 @@ function overview(o){
   h("div",{className:"row"},h("span",{},"Celkový průměr do 1,50"),h("span",{className:c1?"ok":"er"},(c1?"✓ ":"✕ ")+n2(tot))),
   h("div",{className:"row"},h("span",{},"Průměr každého předmětu do 2,50"),h("span",{className:bad.length?"er":"ok",style:"text-align:right"},bad.length?"✕ "+bad.map(x=>x.s.name).join(", "):"✓")),
   h("div",{className:"mu"},"Orientační údaj. Pravidla školy a hodnocení chování se mohou lišit.")));
- o.append(h("h2",{},"Absence"),h("div",{className:"list"},h("div",{},
-  h("div",{className:"row"},h("span",{className:"num",style:"font-size:2rem;font-weight:700"},l?n2(p).replace(/,?0$/,"")+" %":b+" h"),h("span",{className:"mu"},`${b}${l?" z "+l:""} hodin${l?", limit "+DATA.thr+" %":""}`)),
-  h("div",{className:"bar"},h("i",{style:`width:${Math.min(100,p/DATA.thr*100)}%;background:var(--${p>=DATA.thr?"g5":"g1"})`})),
-  DATA.tot?h("div",{className:"mu",style:"margin-top:8px"},`Omluveno ${DATA.tot.ok} h, neomluveno ${DATA.tot.miss} h, pozdní příchody ${DATA.tot.late}`):"")));
+ o.append(h("h2",{},"Absence"),h("div",{className:"list"},h("div",{className:"abrow"},
+  ring(l?p/DATA.thr:0,p>=DATA.thr?"var(--g5)":p>=DATA.thr*.6?"var(--g3)":"var(--g1)"),
+  h("div",{},h("div",{className:"num",style:"font-size:2rem;font-weight:700"},l?n2(p).replace(/,?0$/,"")+" %":b+" h"),
+   h("div",{className:"mu"},`${b}${l?" z "+l:""} hodin${l?", limit "+DATA.thr+" %":""}`),
+   DATA.tot?h("div",{className:"mu",style:"margin-top:4px"},`Omluveno ${DATA.tot.ok} h, neomluveno ${DATA.tot.miss} h, pozdní příchody ${DATA.tot.late}`):""))));
  if(DATA.subs.every(s=>s.prev))o.append(h("h2",{},"Oproti loňsku"),h("div",{className:"list"},...L.map(({s,a})=>{const d=a-s.prev[1];
   return h("div",{className:"row"},h("span",{},s.name),h("span",{className:d<-.05?"ok":d>.05?"er":"mu"},d<-.05?"lepší o "+n2(-d):d>.05?"horší o "+n2(d):"stejné"))})))}
 function daysBlock(o){const D=DATA.days||[];if(!D.length)return;
